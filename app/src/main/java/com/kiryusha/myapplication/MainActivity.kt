@@ -1,6 +1,7 @@
 package com.kiryusha.myapplication
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -145,19 +146,46 @@ class MainActivity : AppCompatActivity(), NewsItemClickListener {
         startActivity(intent)
     }
 
+    private fun isDarkModeCurrentlyEnabled(): Boolean {
+        return when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+            Configuration.UI_MODE_NIGHT_YES -> true
+            Configuration.UI_MODE_NIGHT_NO -> false
+            else -> false
+        }
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
         val darkModeMenuItem = menu.findItem(R.id.action_dark_mode)
-        darkModeMenuItem.isChecked = isDarkModeEnabled
+
+        val isCurrentlyDark = isDarkModeCurrentlyEnabled()
+        darkModeMenuItem.isChecked = isCurrentlyDark
+        Log.d(TAG, "Menu created - Dark mode currently: $isCurrentlyDark")
+
         return true
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        val darkModeMenuItem = menu.findItem(R.id.action_dark_mode)
+        val isCurrentlyDark = isDarkModeCurrentlyEnabled()
+        darkModeMenuItem.isChecked = isCurrentlyDark
+        Log.d(TAG, "Menu prepared - Dark mode currently: $isCurrentlyDark")
+        return super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_dark_mode -> {
-                isDarkModeEnabled = !isDarkModeEnabled
-                item.isChecked = isDarkModeEnabled
-                setDarkModeEnabled(isDarkModeEnabled)
+                val currentlyDark = isDarkModeCurrentlyEnabled()
+                val newMode = !currentlyDark
+
+                Log.d(TAG, "Dark mode toggle: $currentlyDark -> $newMode")
+
+                val mode = if (newMode) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+                AppCompatDelegate.setDefaultNightMode(mode)
+
+                item.isChecked = newMode
+
                 true
             }
             R.id.action_refresh -> {
@@ -167,11 +195,5 @@ class MainActivity : AppCompatActivity(), NewsItemClickListener {
             }
             else -> super.onOptionsItemSelected(item)
         }
-    }
-
-    private fun setDarkModeEnabled(enabled: Boolean) {
-        val mode = if (enabled) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
-        AppCompatDelegate.setDefaultNightMode(mode)
-        recreate()
     }
 }

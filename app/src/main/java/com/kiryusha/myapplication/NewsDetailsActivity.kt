@@ -98,14 +98,52 @@ class NewsDetailsActivity : AppCompatActivity(){
     }
 
     private fun openArticleInBrowser() {
-        article.url?.let { url ->
-            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+        val url = article.url
+        if (url.isNullOrBlank()) {
+            Toast.makeText(this, "Ссылка недоступна", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        try {
+            if (url.contains("example.com") || url.contains("placeholder")) {
+                Toast.makeText(this, "Это тестовая новость. Открываю поисковик с заголовком...", Toast.LENGTH_LONG).show()
+
+                val searchQuery = article.title?.replace(" ", "+") ?: "news"
+                val searchUrl = "https://www.google.com/search?q=$searchQuery"
+                val searchIntent = Intent(Intent.ACTION_VIEW, searchUrl.toUri())
+
+                if (searchIntent.resolveActivity(packageManager) != null) {
+                    startActivity(searchIntent)
+                } else {
+                    Toast.makeText(this, "Браузер не найден", Toast.LENGTH_SHORT).show()
+                }
+                return
+            }
+
+            val uri = url.toUri()
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            intent.addCategory(Intent.CATEGORY_BROWSABLE)
+
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
             } else {
-                Toast.makeText(this, "Браузер не найден", Toast.LENGTH_SHORT).show()
+                val browserIntent = Intent(Intent.ACTION_VIEW, uri).apply {
+                    addCategory(Intent.CATEGORY_BROWSABLE)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+
+                try {
+                    startActivity(browserIntent)
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Не удалось открыть ссылку. Попробуйте скопировать URL вручную.", Toast.LENGTH_LONG).show()
+                }
             }
-        } ?: Toast.makeText(this, "No URL available", Toast.LENGTH_SHORT).show()
+
+        } catch (e: Exception) {
+            Toast.makeText(this, "Ошибка при открытии ссылки: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun formatDate(dateString: String?): String {
