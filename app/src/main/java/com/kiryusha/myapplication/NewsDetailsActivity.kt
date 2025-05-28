@@ -1,7 +1,6 @@
 package com.kiryusha.myapplication
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageView
@@ -11,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.bumptech.glide.Glide
 import com.kiryusha.myapplication.service.Article
+import androidx.core.net.toUri
 
 class NewsDetailsActivity : AppCompatActivity(){
     companion object{
@@ -90,20 +90,20 @@ class NewsDetailsActivity : AppCompatActivity(){
             putExtra(Intent.EXTRA_SUBJECT, article.title)
             putExtra(Intent.EXTRA_TEXT, "${article.title}\n\n${article.url}")
         }
-        startActivity(Intent.createChooser(shareIntent, "Share article via"))
+        startActivity(Intent.createChooser(shareIntent, "Поделиться новостью с помощью..."))
     }
 
     private fun bookmarkArticle() {
-        Toast.makeText(this, "Article bookmarked!", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Новость помещена в закладки!", Toast.LENGTH_SHORT).show()
     }
 
     private fun openArticleInBrowser() {
         article.url?.let { url ->
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(intent)
             } else {
-                Toast.makeText(this, "No browser found", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Браузер не найден", Toast.LENGTH_SHORT).show()
             }
         } ?: Toast.makeText(this, "No URL available", Toast.LENGTH_SHORT).show()
     }
